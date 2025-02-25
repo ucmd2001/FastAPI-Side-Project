@@ -23,7 +23,8 @@ def service(mock_db):
     return PlanCartService(mock_db)
 
 
-def test_data_precheck_with_valid_data(service):
+@pytest.mark.asyncio
+async def test_data_precheck_with_valid_data(service):
     input_data = (
         "2015.11.11|0.7|電子\n\n"
         "1*ipad:2399.00\n1*顯示器:1799.00\n\n"
@@ -31,7 +32,7 @@ def test_data_precheck_with_valid_data(service):
         "2016.3.2 1000 200"
     )
 
-    parsed_data = service.data_precheck(input_data)
+    parsed_data = await service.data_precheck(input_data)
 
     assert len(parsed_data.promotions) == 1
     assert parsed_data.promotions[0].date == datetime(2015, 11, 11).date()
@@ -46,8 +47,8 @@ def test_data_precheck_with_valid_data(service):
     assert parsed_data.coupon.threshold == Decimal("1000")
     assert parsed_data.coupon.discount == Decimal("200")
 
-
-def test_calculate_cart_total(service):
+@pytest.mark.asyncio
+async def test_calculate_cart_total(service):
     parsed_data = ParsedCartData(
         promotions=[
             Promotion(date=datetime(2015, 11, 11).date(), rate=Decimal("0.7"), category="電子")
@@ -60,6 +61,6 @@ def test_calculate_cart_total(service):
         coupon=Coupon(expiry_date=datetime(2016, 3, 2).date(), threshold=Decimal("1000"), discount=Decimal("200")),
     )
 
-    result = service.calculate_cart_total(parsed_data)
+    result = await service.calculate_cart_total(parsed_data)
 
     assert result == Decimal("2738.60")
